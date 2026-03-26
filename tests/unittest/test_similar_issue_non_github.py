@@ -47,3 +47,20 @@ async def test_similar_issue_non_github_no_publish(monkeypatch):
     result = await tool.run()
 
     assert result == ""
+
+
+@pytest.mark.asyncio
+async def test_similar_issue_codex_backend_is_unsupported(monkeypatch):
+    class FakeSettings:
+        class config:
+            git_provider = "github"
+            publish_output = False
+            ai_handler = "codex_cli"
+
+    monkeypatch.setattr("pr_agent.tools.pr_similar_issue.get_settings", lambda: FakeSettings)
+
+    tool = PRSimilarIssue("https://github.com/org/repo/issues/1", None)
+    result = await tool.run()
+
+    assert result == ""
+    assert "codex_cli backend" in tool.unsupported_message

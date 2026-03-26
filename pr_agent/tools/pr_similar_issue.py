@@ -18,8 +18,17 @@ MODEL = "text-embedding-ada-002"
 class PRSimilarIssue:
     def __init__(self, issue_url: str, ai_handler, args: list = None):
         self.issue_url = issue_url
+        self.unsupported_message = None
+        if getattr(get_settings().config, "ai_handler", "litellm") == "codex_cli":
+            self.supported = False
+            self.unsupported_message = (
+                "The /similar_issue tool is not supported with the codex_cli backend. "
+                "Configure an OpenAI API key-backed handler to use embeddings."
+            )
+            return
         self.supported = get_settings().config.git_provider == "github"
         if not self.supported:
+            self.unsupported_message = "The /similar_issue tool is currently supported only for GitHub."
             return
 
         self.cli_mode = get_settings().CONFIG.CLI_MODE
@@ -259,7 +268,7 @@ class PRSimilarIssue:
 
     async def run(self):
         if not self.supported:
-            message = "The /similar_issue tool is currently supported only for GitHub."
+            message = self.unsupported_message or "The /similar_issue tool is currently supported only for GitHub."
             if get_settings().config.publish_output:
                 try:
                     from pr_agent.git_providers import get_git_provider_with_context

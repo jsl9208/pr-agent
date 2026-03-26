@@ -17,6 +17,41 @@ You can give parameters via a configuration file, or from environment variables.
     See [litellm documentation](https://litellm.vercel.app/docs/proxy/quick_start#supported-llms) for the environment variables needed per model, as they may vary and change over time. Our documentation per-model may not always be up-to-date with the latest changes.
     Failing to set the needed keys of a specific model will usually result in litellm not identifying the model type, and failing to utilize it.
 
+### Codex CLI backend
+
+PR-Agent can also use a locally installed Codex CLI instead of the default LiteLLM/OpenAI SDK path.
+This is useful when you want to run PR-Agent with a Codex subscription on a long-lived deployment node.
+
+Set the following in your configuration:
+
+```toml
+[config]
+ai_handler = "codex_cli"
+model = "gpt-5.4" # or another model accepted by `codex exec`
+fallback_models = ["gpt-5.4-mini"]
+
+[codex_cli]
+command = "codex"
+model = "" # optional override; if empty, PR-Agent uses config.model
+codex_home = "/var/lib/pr-agent/.codex" # optional persistent CODEX_HOME
+```
+
+Then, on the same machine or container that runs PR-Agent:
+
+```bash
+codex login
+# or, for headless environments:
+codex login --device-auth
+codex login status
+```
+
+Notes:
+
+- `codex_cli` is intended for long-lived local/self-hosted deployments where Codex authentication can be persisted.
+- `codex_cli` uses the local Codex login cache, so text-generation commands do not require `OPENAI__KEY`.
+- PR-Agent must run on the same host/container as the `codex` binary.
+- Tools that depend on OpenAI embeddings, such as `/similar_issue`, are not supported with `codex_cli`.
+
 ### OpenAI like API
 To use an OpenAI like API, set the following in your `.secrets.toml` file:
 

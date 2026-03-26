@@ -2,7 +2,7 @@ import shlex
 from functools import partial
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
-from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
+from pr_agent.algo.ai_handlers.factory import get_ai_handler
 from pr_agent.algo.cli_args import CliArgs
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings
@@ -48,8 +48,8 @@ commands = list(command2class.keys())
 
 
 class PRAgent:
-    def __init__(self, ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
-        self.ai_handler = ai_handler  # will be initialized in run_action
+    def __init__(self, ai_handler: partial[BaseAiHandler,] | None = None):
+        self.ai_handler = ai_handler or get_ai_handler()
 
     async def _handle_request(self, pr_url, request, notify=None) -> bool:
         # First, apply repo specific settings if exists

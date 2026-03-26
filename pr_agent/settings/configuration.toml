@@ -6,6 +6,7 @@
 # models
 model="gpt-5.4-2026-03-05"
 fallback_models=["o4-mini"]
+ai_handler="litellm" # "litellm" (default) or "codex_cli"
 #model_reasoning="o4-mini" # dedicated reasoning model for self-reflection
 #model_weak="gpt-4o" # optional, a weaker model to use for some easier tasks
 # CLI
@@ -324,6 +325,11 @@ success_callback = []
 failure_callback = []
 service_callback = []
 # model_id = "" # Optional: Custom inference profile ID for Amazon Bedrock
+
+[codex_cli]
+command = "codex" # The Codex CLI executable to run for subscription-backed local execution
+model = "" # Optional: override the model passed to `codex exec`; defaults to config.model
+codex_home = "" # Optional: explicit CODEX_HOME path for persistent Codex auth/session state
 
 [pr_similar_issue]
 skip_comments = false

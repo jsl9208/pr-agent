@@ -66,9 +66,10 @@ git clone https://github.com/qodo-ai/pr-agent.git
 5. Prepare variables and secrets. Skip this step if you plan on setting these as environment variables when running the agent:
     1. In the configuration file/variables:
         - Set `config.git_provider` to "gitlab"
+        - If you want to use a Codex subscription instead of an API key, set `config.ai_handler` to `"codex_cli"`
 
     2. In the secrets file/variables:
-        - Set your AI model key in the respective section
+        - Set your AI model key in the respective section, or configure `codex_cli` as described below
         - In the [gitlab] section, set `personal_access_token` (with token from step 2) and `shared_secret` (with secret from step 3)
         - **Authentication type**: Set `auth_type` to `"private_token"` for older GitLab versions (e.g., 11.x) or private deployments. Default is `"oauth_token"` for gitlab.com and newer versions.
 
@@ -78,6 +79,10 @@ git clone https://github.com/qodo-ai/pr-agent.git
 docker build . -t gitlab_pr_agent --target gitlab_webhook -f docker/Dockerfile
 docker push codiumai/pr-agent:gitlab_webhook  # Push to your Docker repository
 ```
+
+If you use `codex_cli`, install the `codex` binary in the same runtime as PR-Agent.
+For container deployments, that usually means extending the PR-Agent image with a custom Dockerfile and running `codex login`
+inside the long-lived container or image entrypoint.
 
 7. Set the environmental variables, the method depends on your docker runtime. Skip this step if you included your secrets/configuration directly in the Docker image.
 
@@ -90,6 +95,26 @@ GITLAB__AUTH_TYPE=oauth_token  # Use "private_token" for older GitLab versions
 OPENAI__KEY=<your_openai_api_key>
 PORT=3000  # Optional: override the webhook server port
 ```
+
+For a Codex subscription-backed deployment, use the following instead of `OPENAI__KEY`:
+
+```bash
+CONFIG__AI_HANDLER=codex_cli
+CODEX_CLI__COMMAND=codex
+CODEX_CLI__MODEL=gpt-5.4 # optional
+CODEX_CLI__CODEX_HOME=/var/lib/pr-agent/.codex # optional if CODEX_HOME is already set
+CODEX_HOME=/var/lib/pr-agent/.codex
+PORT=3000
+```
+
+Before starting the webhook server, authenticate Codex on that deployment node:
+
+```bash
+codex login
+codex login status
+```
+
+Persist `CODEX_HOME` across container or host restarts so PR-Agent can reuse the Codex login cache.
 
 8. Create a webhook in your GitLab project. Set the URL to `http[s]://<PR_AGENT_HOSTNAME>/webhook`, the secret token to the generated secret from step 3, and enable the triggers `push`, `comments` and `merge request events`.
 
