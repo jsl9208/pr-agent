@@ -29,6 +29,14 @@ FROM base AS gitlab_webhook
 ADD pr_agent pr_agent
 CMD ["python", "pr_agent/servers/gitlab_webhook.py"]
 
+FROM base AS gitlab_webhook_codex
+RUN apt update && apt install --no-install-recommends -y nodejs npm && \
+    npm install -g @openai/codex && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV CODEX_HOME=/var/lib/pr-agent/.codex
+ADD pr_agent pr_agent
+CMD ["python", "pr_agent/servers/gitlab_webhook.py"]
+
 FROM base AS azure_devops_webhook
 ADD pr_agent pr_agent
 CMD ["python", "pr_agent/servers/azuredevops_server_webhook.py"]

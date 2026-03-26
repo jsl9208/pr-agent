@@ -1,0 +1,14 @@
+services:
+  pr-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: gitlab_webhook_codex
+    container_name: pr-agent-gitlab-codex
+    restart: unless-stopped
+    env_file:
+      - ./pr-agent.env
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./codex-home:/var/lib/pr-agent/.codex
